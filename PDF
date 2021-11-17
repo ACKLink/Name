@@ -1,0 +1,37 @@
+function afterFormSubmit(){
+    createPDF();
+}
+
+
+function createPDF(){
+
+  const docFile = DriveApp.getFileById("***");
+  const tempFolder = DriveApp.getFolderById("***");
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Form Responses 1');
+  const pdfFolder = DriveApp.getFolderById("***");
+  const rows = sheet.getDataRange().getValues();
+
+  rows.forEach(function(row,index){
+    if (index === 0) return;
+    if (row[19]) return;
+
+  const tempFile = docFile.makeCopy(`${'Razón Social',row[4]}, ${'Nombre Completo',row[2]} NDA`,tempFolder);
+
+  const openDoc = DocumentApp.openById(tempFile.getId());
+  const body = openDoc.getBody();
+  body.replaceText("{{Razón Social}}",row[4]);
+  body.replaceText("{{Dirección Completa}}",row[5]);
+  openDoc.saveAndClose();
+
+  const blobPDF = tempFile.getAs(MimeType.PDF)
+  const pdfFile = pdfFolder.createFile(blobPDF).setName(`${'Razón Social',row[4]}, ${'Nombre Completo',row[2]} NDA`);
+ 
+   //Store the url of our new document in a variable
+  const url = pdfFile.getUrl();
+    //Write that value back to the 'Document Link' column in the spreadsheet. 
+  sheet.getRange(index + 1, 20).setValue(url)
+  
+  })
+
+}
+
